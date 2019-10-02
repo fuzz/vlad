@@ -16,8 +16,8 @@ Errors are passed through as the `unit_name` with a `multiplication_factor` of `
 
 The service is currently live on a small cloud instance:
 
-[https://kt-22.com/units/si?units=(degree/minute)]
+https://kt-22.com/units/si?units=(degree/minute)
 
 or use `sbt run` to start the service locally:
 
-[http://127.0.0.1:1337/units/si?units=(degree/minute)]
+http://127.0.0.1:1337/units/si?units=(degree/minute)

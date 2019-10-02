@@ -18,6 +18,7 @@ object UnitConverter {
   final case class UnitString(unitString: String) extends AnyVal
 
   final case class Converter(s: (String, String)) extends AnyVal
+
   object Converter {
     implicit val converterEncoder: Encoder[Converter] = new Encoder[Converter] {
       final def apply(a: Converter): Json = Json.obj(
@@ -25,11 +26,12 @@ object UnitConverter {
         ("multiplication_factor", Json.fromString(a.s._2))
       )
     }
-    implicit def converterEntityEncoder[F[_]: Applicative]: EntityEncoder[F, Converter] =
+
+    implicit def converterEntityEncoder[F[_] : Applicative]: EntityEncoder[F, Converter] =
       jsonEncoderOf[F, Converter]
   }
 
-  def impl[F[_]: Applicative]: UnitConverter[F] = new UnitConverter[F] {
+  def impl[F[_] : Applicative]: UnitConverter[F] = new UnitConverter[F] {
     def convertUnits(u: UnitConverter.UnitString): F[UnitConverter.Converter] = {
       val (s, d) = fastparse.parse(u.unitString, unitParser.parser(_)).get.value.value
 
@@ -50,11 +52,11 @@ object unitParser {
 
   case class SciUnit(value: (String, Double)) extends AnyVal
 
-  def unit[_: P]: P[SciUnit] = P( StringIn(
+  def unit[_: P]: P[SciUnit] = P(StringIn(
     "°", "'", "\"", "L", "arcminute", "arcsecond", "day", "degree", "d",
     "ha", "hectare", "hour", "h", "kilogram", "kg", "litre", "metre",
     "minute", "min", "m", "radian", "rad", "second", "s", "tonne", "t"
-   )).!.map {
+  )).!.map {
     //   Name        | Symbol=> SI Conversion
     case "arcminute" | "'"   => SciUnit("rad", Pi / 10800)
     case "arcsecond" | "\""  => SciUnit("rad", Pi / 648000)
@@ -71,18 +73,21 @@ object unitParser {
     case "second"    | "s"   => SciUnit("s"  , 1)
   }
 
-  def parens[_: P]: P[SciUnit] = P( "(" ~/ operat ~ ")" )
-  def factor[_: P]: P[SciUnit] = P( unit | parens )
-  def operat[_: P]: P[SciUnit] = P( factor ~ (CharIn("*/").! ~/ factor).rep ).map(eval)
-  def parser[_: P]: P[SciUnit] = P( operat ~ End ).map(sigFig).map(stripOuterParens)
+  def parens[_: P]: P[SciUnit] = P("(" ~/ operat ~ ")")
+
+  def factor[_: P]: P[SciUnit] = P(unit | parens)
+
+  def operat[_: P]: P[SciUnit] = P(factor ~ (CharIn("*/").! ~/ factor).rep).map(eval)
+
+  def parser[_: P]: P[SciUnit] = P(operat ~ End).map(sigFig).map(stripOuterParens)
 
   def eval(tree: (SciUnit, Seq[(String, SciUnit)])): SciUnit = {
     val (base, ops) = tree
-    val t = ops.foldLeft(base){ case (lhs, (op, rhs)) => op match {
+    val t = ops.foldLeft(base) { case (lhs, (op, rhs)) => op match {
       case "*" => SciUnit(lhs.value._1 + "*" + rhs.value._1, lhs.value._2 * rhs.value._2)
       case "/" => SciUnit(lhs.value._1 + "/" + rhs.value._1, lhs.value._2 / rhs.value._2)
     }}
-    SciUnit("(" + t.value._1 +")", t.value._2)
+    SciUnit("(" + t.value._1 + ")", t.value._2)
   }
 
   def sigFig(s: SciUnit): SciUnit = {
@@ -95,7 +100,7 @@ object unitParser {
 
   def stripOuterParens(s: SciUnit): SciUnit = {
     val a = s.value._1.replaceAll("""^\(""", "")
-                      .replaceAll("""\)$""", "")
+      .replaceAll("""\)$""", "")
 
     SciUnit(a, s.value._2)
   }

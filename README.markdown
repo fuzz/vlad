@@ -9,3 +9,5 @@ instead return a `multiplication_factor` in scientific notation that actually
 has 14 significant figures.
 
 `scalafmt` is used throughout except for the case "table" in `UnitConverter.scala`, which is preserved for readability.
+
+Errors are passed through as the `unit_name` with a `multiplication_factor` of `0.0`.

@@ -46,7 +46,7 @@ object UnitConverter {
         .replaceAll("""\.$""", ".0")
 
       // Use this instead for proper sigfigs via scientific notation
-      // Converter(us, d.toString).pure[F]
+      // Converter(s, d.toString).pure[F]
       Converter(s, mf).pure[F]
     }
   }

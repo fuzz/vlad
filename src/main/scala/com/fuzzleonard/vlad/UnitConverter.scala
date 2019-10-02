@@ -33,7 +33,12 @@ object UnitConverter {
 
   def impl[F[_] : Applicative]: UnitConverter[F] = new UnitConverter[F] {
     def convertUnits(u: UnitConverter.UnitString): F[UnitConverter.Converter] = {
-      val (s, d) = fastparse.parse(u.unitString, unitParser.parser(_)).get.value.value
+
+      val p = fastparse.parse(u.unitString, unitParser.parser(_))
+      val (s,d) = p match {
+        case Parsed.Success(s,_) => (s.value._1, s.value._2)
+        case Parsed.Failure(_,_,_) => (p.toString, 0.0)
+      }
 
       // A decimal representation per the example request
       val mf = s"%.${unitParser.Precision}f".format(d).toString

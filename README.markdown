@@ -1,6 +1,6 @@
 # Vlad
 
-Citrine Informatics Take-Home Challenge
+Just another code test.
 
 The friendly decimal representation in the example response is implemented, but
 of course it breaks down when the `multiplication_factor` gets very large or
